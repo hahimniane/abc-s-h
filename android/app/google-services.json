@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "505514457696",
+    "project_id": "abcbul-new",
+    "storage_bucket": "abcbul-new.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:505514457696:android:8981116abb8d98af3ae105",
+        "android_client_info": {
+          "package_name": "com.abcbul.abcbul.android"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCn1Ke8LeZDan6RMHah4zaKG4ebVAyhTPM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:505514457696:android:3f6becf0aa73a2043ae105",
+        "android_client_info": {
+          "package_name": "com.abcbul.ios"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCn1Ke8LeZDan6RMHah4zaKG4ebVAyhTPM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:505514457696:android:ac5a9c926bdbeebd3ae105",
+        "android_client_info": {
+          "package_name": "com.s.barry.abcbulwebview"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCn1Ke8LeZDan6RMHah4zaKG4ebVAyhTPM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
