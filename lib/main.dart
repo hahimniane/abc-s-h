@@ -339,6 +339,7 @@
 import 'dart:async';
 import 'package:abcbull/firebase_options.dart';
 import 'package:abcbull/token_service.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 // import 'package:firebase_messaging/firebase_messaging.dart';
@@ -347,8 +348,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
 Future main() async {
-  WidgetsFlutterBinding.ensureInitialized();
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -369,6 +374,27 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  final HttpsCallable callable =
+      FirebaseFunctions.instance.httpsCallable('createUserDocument');
+
+  Future<void> _createUserDocument() async {
+    final HttpsCallable callable =
+        FirebaseFunctions.instance.httpsCallable('createUserDocument');
+    try {
+      final result = await callable.call(<String, dynamic>{
+        'name': 'John Doe',
+        'email': 'john.doe@example.com',
+      });
+      if (result.data['success']) {
+        print('Document created with ID: ${result.data['id']}');
+      } else {
+        print('Error creating document: ${result.data['error']}');
+      }
+    } catch (e) {
+      print('Error calling function: $e');
+    }
+  }
+
   final GlobalKey webViewKey = GlobalKey();
   InAppWebViewController? webViewController;
   InAppWebViewSettings settings = InAppWebViewSettings(
@@ -387,6 +413,8 @@ class _MyAppState extends State<MyApp> {
   final urlController = TextEditingController();
 
   String? _deviceToken;
+  bool _showTextField = false;
+  final TextEditingController _emailController = TextEditingController();
 
   @override
   void initState() {
@@ -410,40 +438,74 @@ class _MyAppState extends State<MyApp> {
           );
   }
 
+  void _toggleTextField() {
+    setState(() {
+      _showTextField = !_showTextField;
+    });
+  }
+
+  void _submitEmail() {
+    // Perform your email submission logic here
+    print('Submitted email: ${_emailController.text}');
+    // Hide the text field after submission
+    setState(() {
+      _showTextField = false;
+      _emailController.clear();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.startTop,
       floatingActionButton: FloatingActionButton(
-        elevation: 3,
-        child: const Icon(
-          Icons.notification_add,
-          size: 40,
-          color: Colors.purple,
-        ),
-        onPressed: () {
-          TokenService tokenService = TokenService();
-          tokenService.sendTokenForNotification(
-              email: "hassimiou.niane@maine.edu", token: 'testtoken');
-        },
-      ),
+          elevation: 3,
+          child: const Icon(
+            Icons.notification_add,
+            size: 40,
+            color: Colors.purple,
+          ),
+          onPressed: () async {
+            final HttpsCallable callable =
+                FirebaseFunctions.instance.httpsCallable('createUserDocument');
+            try {
+              final result = await callable.call();
+              if (result.data['success']) {
+                print('Document created with ID: ${result.data['id']}');
+              } else {
+                print('Error creating document: ${result.data['error']}');
+              }
+            } catch (e) {
+              print('Error calling function: $e');
+            }
+          }
+          // _toggleTextField,
+          ),
       body: Container(
         color: Theme.of(context).primaryColor,
         child: SafeArea(
           child: Column(
             children: <Widget>[
-              // TextField(
-              //   decoration: const InputDecoration(prefixIcon: Icon(Icons.search)),
-              //   controller: urlController,
-              //   keyboardType: TextInputType.url,
-              //   onSubmitted: (value) {
-              //     var url = WebUri(value);
-              //     if (url.scheme.isEmpty) {
-              //       url = WebUri("https://www.google.com/search?q=$value");
-              //     }
-              //     webViewController?.loadUrl(urlRequest: URLRequest(url: url));
-              //   },
-              // ),
+              if (_showTextField)
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: _emailController,
+                        decoration: const InputDecoration(
+                          labelText: 'Enter your email',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      ElevatedButton(
+                        onPressed: _submitEmail,
+                        child: Text('Submit'),
+                      ),
+                    ],
+                  ),
+                ),
               Expanded(
                 child: Stack(
                   children: [
@@ -458,14 +520,12 @@ class _MyAppState extends State<MyApp> {
                       onWebViewCreated: (controller) {
                         webViewController = controller;
                       },
-
                       onLoadStart: (controller, url) {
                         setState(() {
                           this.url = url.toString();
                           urlController.text = this.url;
                         });
                       },
-
                       shouldInterceptRequest: (controller, request) async {
                         var headers = request.headers ?? {};
                         headers['Authorization'] = 'Bearer YOUR_TOKEN_HERE';
@@ -482,25 +542,6 @@ class _MyAppState extends State<MyApp> {
                           action: PermissionResponseAction.GRANT,
                         );
                       },
-                      // shouldOverrideUrlLoading:
-                      //     (controller, navigationAction) async {
-                      //   var uri = navigationAction.request.url!;
-                      //   var headers = {
-                      //     ...navigationAction.request.headers ?? {},
-                      //     "Authorization": "Bearer YOUR_TOKEN_HERE"
-                      //   };
-
-                      //   print('Loading URL: ${uri.toString()}');
-                      //   print('Headers: $headers');
-
-                      //   await controller.loadUrl(
-                      //     urlRequest: URLRequest(
-                      //       url: uri,
-                      //       headers: headers,
-                      //     ),
-                      //   );
-                      //   return NavigationActionPolicy.CANCEL;
-                      // },
                       onLoadStop: (controller, url) async {
                         pullToRefreshController?.endRefreshing();
                         setState(() {
@@ -539,29 +580,6 @@ class _MyAppState extends State<MyApp> {
                   ],
                 ),
               ),
-              // ButtonBar(
-              //   alignment: MainAxisAlignment.center,
-              //   children: <Widget>[
-              //     ElevatedButton(
-              //       child: const Icon(Icons.arrow_back),
-              //       onPressed: () {
-              //         webViewController?.goBack();
-              //       },
-              //     ),
-              //     ElevatedButton(
-              //       child: const Icon(Icons.arrow_forward),
-              //       onPressed: () {
-              //         webViewController?.goForward();
-              //       },
-              //     ),
-              //     ElevatedButton(
-              //       child: const Icon(Icons.refresh),
-              //       onPressed: () {
-              //         webViewController?.reload();
-              //       },
-              //     ),
-              //   ],
-              // ),
             ],
           ),
         ),
